@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: FindDependencies.pm,v 1.15 2007/08/19 00:44:01 drhyde Exp $
+# $Id: FindDependencies.pm,v 1.17 2007/08/19 11:58:31 drhyde Exp $
 package CPAN::FindDependencies;
 
 use strict;
@@ -17,7 +17,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(finddeps);
 
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 =head1 NAME
 
@@ -45,10 +45,15 @@ PAUSEID/Some-Distribution-1.234); and the following named parameters:
 
 =over
 
+=item nowarnings
+
+Warnings about modules where we can't find their META.yml, and so
+can't divine their pre-requisites, will be suppressed;
+
 =item fatalerrors
 
-Failure to get a module's dependencies will be a fatal error instead of merely
-emiting a warning
+Failure to get a module's dependencies will be a fatal error
+instead of merely emitting a warning;
 
 =back
 
@@ -197,7 +202,7 @@ sub _getreqs_uncached {
     if(!$res->is_success()) {
         if($opts->{fatalerrors}) {
             die(__PACKAGE__.": $author/$distname: no META.yml\n");
-        } else { 
+        } elsif(!$opts->{nowarnings}) { 
             warn('WARNING: '.__PACKAGE__.": $author/$distname: no META.yml\n");
         }
         return [];
