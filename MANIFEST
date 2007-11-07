@@ -12,4 +12,5 @@ t/03-dependency-class.t
 t/pod-coverage.t
 t/pod.t
 t/lib/chkenv.pm
+t/04-build_requires.t
 META.yml                                 Module meta-data (added by MakeMaker)
