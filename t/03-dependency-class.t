@@ -11,4 +11,4 @@ use CPAN::FindDependencies 'finddeps';
 my $dep = (finddeps('CPAN', nowarnings => 1))[0];
 
 ok($dep->name() eq 'CPAN', 'Dependency object gives the right name for modules');
-ok($dep->distribution() =~ m!^A/AN/ANDK/CPAN-!, 'Dependency object gives the right distribution for modules');
+ok($dep->distribution() =~ m!^A/AN/ANDK/CPAN-\d!, 'Dependency object gives the right distribution for modules');

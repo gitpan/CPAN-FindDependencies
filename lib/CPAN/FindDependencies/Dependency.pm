@@ -1,4 +1,4 @@
-# $Id: Dependency.pm,v 1.5 2007/08/17 21:41:54 drhyde Exp $
+# $Id: Dependency.pm,v 1.6 2007/12/01 23:54:12 drhyde Exp $
 #!perl -w
 package CPAN::FindDependencies::Dependency;
 
@@ -6,7 +6,7 @@ use strict;
 
 use vars qw($VERSION);
 
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 =head1 NAME
 
@@ -30,10 +30,7 @@ created by the CPAN::FindDependencies module.
 
 sub _new {
     my($class, %opts) = @_;
-    bless {
-        depth      => $opts{depth},
-        cpanmodule => $opts{cpanmodule}
-    }, $class
+    bless \%opts, $class;
 }
 
 =head2 name
@@ -42,7 +39,7 @@ The name of the module
 
 =cut
 
-sub name { $_[0]->cpanmodule()->id(); }
+sub name { $_[0]->{cpanmodule} }
 
 =head2 distribution
 
@@ -50,7 +47,9 @@ The name of the distribution containing the module
 
 =cut
 
-sub distribution { $_[0]->cpanmodule()->distribution()->id(); }
+sub distribution {
+    $_[0]->{p}->package($_[0]->name())->distribution()->prefix();
+}
 
 =head2 depth
 
@@ -60,13 +59,23 @@ How deeply nested this module is in the dependency tree
 
 sub depth { return $_[0]->{depth} }
 
-=head2 cpanmodule
+=head2 incore
 
-The CPAN::Module object from which most of this was derived
+Whether a sufficiently high version of this module can be found in
+the perl core that the user specified.
 
 =cut
 
-sub cpanmodule { return $_[0]->{cpanmodule} }
+sub incore { return $_[0]->{incore} }
+
+=head2 warning
+
+If any warnings were generated while processing the module (even
+if suppressed), this will return them.
+
+=cut
+
+sub warning { return $_[0]->{warning} }
 
 =head1 BUGS/LIMITATIONS
 
