@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: 00-nometa.t,v 1.7 2007/08/19 11:57:11 drhyde Exp $
+# $Id: 00-nometa.t,v 1.8 2007/12/03 17:46:47 drhyde Exp $
 use strict;
 
 use Test::More;

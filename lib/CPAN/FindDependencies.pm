@@ -1,5 +1,6 @@
 #!perl -w
-# $Id: FindDependencies.pm,v 1.20 2007/12/01 23:55:38 drhyde Exp $
+# $Id: FindDependencies.pm,v 1.23 2007/12/13 13:42:11 drhyde Exp $
+
 package CPAN::FindDependencies;
 
 use strict;
@@ -16,9 +17,10 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(finddeps);
 
-$VERSION = '1.99_01';
+$VERSION = '2.0';
 
 use constant DEFAULT02PACKAGES => 'http://www.cpan.org/modules/02packages.details.txt.gz';
+use constant MAXINT => ~0;
 
 =head1 NAME
 
@@ -71,17 +73,23 @@ specified, it defaults to 5.005.  Three part version numbers
 
 =item 02packages
 
-The location of CPAN.pm's C<02packages.details.txt.gz> file as a URL.
-To specify a local file, say something like
-C<file:///home/me/minicpan/02packages.details.txt.gz>.  This defaults
-to fetching it from a public CPAN mirror.  The file is fetched once,
-when the module loads.
+The location of CPAN.pm's C<02packages.details.txt.gz> file as a
+local filename, with either a relative or an absolute path.  If not
+specified, it is fetched from a CPAN mirror instead.  The file is
+fetched just once.
 
 =item cachedir
 
 A directory to use for caching.  It defaults to no caching.  Even if
 caching is turned on, this is only for META.yml files.  02packages is
-not cached. (This isn't yet implemented)
+not cached - if you want to read that from a local disk, see the
+C<02packages> option.
+
+=item maxdepth
+
+Cuts off the dependency tree at the specified depth.  Your specified
+module is at depth 0, your dependencies at depth 1, their dependencies
+at depth 2, and so on.
 
 =back
 
@@ -102,13 +110,30 @@ The distribution containing this module
 
 How deep in the dependency tree this module is
 
+=item warning
+
+If any warning was generated (even if suppressed) for the module,
+it will be recorded here.
+
 =back
+
+Any modules listed as dependencies but which are in the perl core
+distribution for the version of perl you specified are suppressed.
+
+These objects are returned in a semi-defined order.  You can be sure
+that a module will be immediately followed by one of its dependencies,
+then that dependency's dependencies, and so on, followed by the 'root'
+module's next dependency, and so on.  You can reconstruct the tree
+by paying attention to the depth of each object.
+
+The ordering of any particular module's immediate 'children' can be
+assumed to be random - it's actually hash key order.
 
 =head1 BUGS/WARNINGS/LIMITATIONS
 
 You must have web access to L<http://search.cpan.org/> and (unless
 you tell it where else to look for the index)
-L<http://www.cpan.org/>.
+L<http://www.cpan.org/>, or have all the data cached locally..
 If any
 META.yml files are missing, the distribution's dependencies will not
 be found and a warning will be spat out.
@@ -155,6 +180,7 @@ sub finddeps {
     my($module, %opts) = @_;
 
     $opts{perl} ||= 5.005;
+    $opts{maxdepth} ||= MAXINT;
 
     die(__PACKAGE__.": $opts{perl} is a broken version number\n")
         if($opts{perl} =~ /[^0-9.]/);
@@ -202,16 +228,23 @@ sub _module2obj {
 
 # FIXME make these memoise, maybe to disk
 sub _finddeps { return @{_finddeps_uncached(@_)}; }
-sub _getreqs  { return @{_getreqs_uncached(@_)}; }
 
 sub _get02packages {
-    get(shift() || DEFAULT02PACKAGES) ||
+    my $file = shift;
+    if($file) {
+        eval 'use URI::file';
+        die($@) if($@);
+        $file = URI::file->new_abs($file);
+    }
+    get($file || DEFAULT02PACKAGES) ||
         die(__PACKAGE__.": Couldn't fetch 02packages index file\n");
 }
 
 sub _incore {
     my %args = @_;
     my $core = $Module::CoreList::version{$args{perl}}{$args{module}};
+    $core =~ s/_/00/g if($core);
+    $args{version} =~ s/_/00/g;
     return ($core && $core >= $args{version}) ? $core : undef;
 }
 
@@ -222,15 +255,8 @@ sub _finddeps_uncached {
     )};
     $depth ||= 0;
 
-    return [] if($target eq 'perl');
-    return [
-        CPAN::FindDependencies::Dependency->_new(
-            depth      => $depth,
-            cpanmodule => $target,
-            incore     => 1,
-            p          => $p
-        )
-    ] if(
+    return [] if(
+        $target eq 'perl' ||
         _incore(
             module => $target,
             perl => $opts->{perl},
@@ -247,11 +273,11 @@ sub _finddeps_uncached {
     return [] if($seen->{$distname});
     $seen->{$distname} = 1;
 
-    my %reqs = _getreqs(
+    my %reqs = @{_getreqs(
         author   => $author,
         distname => $distname,
         opts     => $opts,
-    );
+    )};
     my $warning = '';
     if($reqs{'-warning'}) {
         $warning = $reqs{'-warning'};
@@ -262,11 +288,11 @@ sub _finddeps_uncached {
         CPAN::FindDependencies::Dependency->_new(
             depth      => $depth,
             cpanmodule => $target,
-            incore     => 0,
             p          => $p,
             ($warning ? (warning => $warning) : ())
         ),
-        map {
+        ($depth != $opts->{maxdepth}) ? (map {
+            # print "Looking at $_\n";
             _finddeps(
                 target  => $_,
                 opts    => $opts,
@@ -274,23 +300,43 @@ sub _finddeps_uncached {
                 seen    => $seen,
                 version => $reqs{$_}
             );
-        } keys %reqs
+        } keys %reqs) : ()
     ];
 }
 
-sub _getreqs_uncached {
+sub _getreqs {
     my %args = @_;
     my($author, $distname, $opts) = @args{qw(
         author distname opts
     )};
 
-    my $yaml = get("http://search.cpan.org/src/$author/$distname/META.yml");
+    my $yaml;
+    if(
+        $opts->{cachedir} &&
+        -d $opts->{cachedir} &&
+        -r $opts->{cachedir}."/$distname.yml"
+    ) {
+        open(my $yamlfh, $opts->{cachedir}."/$distname.yml") ||
+            _emitwarning('Error reading '.$opts->{cachedir}."/$distname.yml: $!");
+        local $/ = undef;
+        $yaml = <$yamlfh>;
+        close($yamlfh);
+    } else {
+        $yaml = get("http://search.cpan.org/src/$author/$distname/META.yml");
+        if($yaml && $opts->{cachedir} && -d $opts->{cachedir}) {
+            open(my $yamlfh, '>', $opts->{cachedir}."/$distname.yml") ||
+                _emitwarning('Error writing '.$opts->{cachedir}."/$distname.yml: $!");
+            print $yamlfh $yaml;
+            close($yamlfh);
+        }
+    }
+
     if(!$yaml) {
         _emitwarning("$author/$distname: no META.yml", %{$opts});
         return ['-warning', 'no META.yml'];
     } else {
-        my $yaml = YAML::Load($yaml);
-        return ['-warning', 'no META.yml'] if(!defined($yaml));
+        my $yaml = eval { YAML::Load($yaml); };
+        return ['-warning', 'no META.yml'] if($@ || !defined($yaml));
         $yaml->{requires} ||= {};
         $yaml->{build_requires} ||= {};
         return [%{$yaml->{requires}}, %{$yaml->{build_requires}}];

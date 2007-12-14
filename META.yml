@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         CPAN-FindDependencies
-version:      1.99_01
+version:      2.0
 version_from: lib/CPAN/FindDependencies.pm
 installdirs:  site
 requires:
@@ -9,6 +9,7 @@ requires:
     Module::CoreList:              2.12
     Parse::CPAN::Packages:         2.26
     Scalar::Util:                  1.14
+    URI::file:                     4.13
     YAML:                          0.61
 
 distribution_type: module

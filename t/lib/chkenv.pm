@@ -1,13 +1,13 @@
 #!perl -w
-# $Id: chkenv.pm,v 1.2 2007/08/16 22:27:17 drhyde Exp $
+# $Id: chkenv.pm,v 1.3 2007/12/03 17:46:48 drhyde Exp $
 use strict;
 
 use Test::More;
 use LWP::Simple;
 
 unless(
-    get("http://search.cpan.org/~dcantrell/") &&
-    get("http://www.cpan.org/modules/02packages.details.txt.gz")
+    head("http://search.cpan.org/~dcantrell/") &&
+    head("http://www.cpan.org/modules/02packages.details.txt.gz")
 ) {
     plan skip_all => "Need web access to the CPAN";
     exit;
