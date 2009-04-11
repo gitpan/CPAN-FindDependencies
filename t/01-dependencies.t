@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: 01-dependencies.t,v 1.8 2007/12/13 13:42:11 drhyde Exp $
+# $Id: 01-dependencies.t,v 1.9 2007/12/13 15:16:03 drhyde Exp $
 use strict;
 
 use Test::More;

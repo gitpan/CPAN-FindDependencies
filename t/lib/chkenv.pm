@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: chkenv.pm,v 1.3 2007/12/03 17:46:48 drhyde Exp $
+# $Id: chkenv.pm,v 1.4 2007/12/13 15:16:03 drhyde Exp $
 use strict;
 
 use Test::More;

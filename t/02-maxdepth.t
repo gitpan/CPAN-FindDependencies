@@ -1,5 +1,5 @@
 #!perl -w
-# $Id$
+# $Id: 02-maxdepth.t,v 1.1 2007/12/13 15:16:03 drhyde Exp $
 use strict;
 
 use Test::More;
