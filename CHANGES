@@ -1,3 +1,9 @@
+2.2     2009-04-15      Add stuff to see 'recommended' modules, thanks to
+                          Georg Oechsler;
+                        Capture STDERR and test that it's empty in
+                          script test (and spew if it's not, for to help
+                          debug from CPAN-testers reports)
+
 2.1     2009-04-11      Add Ian Tegebo's patch to get deps from Makefile.PL
 
 2.0     2007-12-13      Add caching;
