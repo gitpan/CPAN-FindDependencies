@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CPAN-FindDependencies
-version:            2.22
+version:            2.3
 abstract:           ~
 author:  []
 license:            unknown

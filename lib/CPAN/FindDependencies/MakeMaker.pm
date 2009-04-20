@@ -9,12 +9,13 @@ use vars qw($VERSION @ISA @EXPORT_OK);
 use File::Temp qw(tempdir);
 use Cwd qw(getcwd abs_path);
 use Capture::Tiny qw(capture);
+use Config;
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw( getreqs_from_mm );
 
-$VERSION = '0.1';
+$VERSION = '0.2';
 
 =head1 NAME
 
@@ -58,7 +59,21 @@ sub getreqs_from_mm {
     close($MKFH);
 
     # execute, suppressing noise ...
-    capture { system($^X, 'Makefile.PL'); };
+    eval { capture {
+        if(my $pid = fork()) { # parent
+            local $SIG{ALRM} = sub {
+                kill 9, $pid; # quit RIGHT FUCKING NOW
+                die("Makefile.PL didn't finish in a reasonable time\n");
+            };
+            alarm(5);
+            waitpid($pid, 0);
+            alarm(0);
+        } else {
+            # FIXME fork, exec, kill on ALRM
+            exec($Config{perlpath}, 'Makefile.PL');
+        }
+    } };
+    return $@ if($@);
 
     # read Makefile
     open($MKFH, 'Makefile') || warn "Can't read Makefile\n";
@@ -90,7 +105,10 @@ sub _parse_makefile {
 =head1 SECURITY
 
 This module assumes that its input is trustworthy and can be safely
-executed.
+executed.  The only protection in place is that a vague attempt is made
+to catch a Makefile.PL that just sits there doing nothing - either if it's
+in a loop, or sitting at a prompt.  But even that can be defeated by
+an especially naughty person.
 
 =head1 BUGS/LIMITATIONS
 
