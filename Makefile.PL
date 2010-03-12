@@ -1,5 +1,6 @@
 # $Id: Makefile.PL,v 1.11 2007/12/13 15:16:03 drhyde Exp $
 use ExtUtils::MakeMaker;
+use Config;
 
 WriteMakefile(
     NAME         => 'CPAN::FindDependencies',
@@ -18,5 +19,16 @@ WriteMakefile(
         'File::Temp'            => 0.19,
         'Capture::Tiny'         => 0.05,
         'Devel::CheckOS'        => 1.52,
+    },
+    dist => {
+        DIST_CP => 'cp',
+        PREOP => "$Config{perlpath} -Mstrict -Mlib::CPAN::FindDependencies -w shared/doincludes \$(EXE_FILES) \$(TO_INST_PM)"
     }
 );
+
+package MY;
+sub test {
+    my $text = shift->SUPER::test(@_);
+    $text =~ s/\t(.*test_harness)/\tHARNESS_OPTIONS=j8 $1/;
+    $text;
+}
