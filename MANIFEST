@@ -1,4 +1,4 @@
-CHANGES
+CHANGELOG
 lib/CPAN/FindDependencies.pm
 lib/CPAN/FindDependencies/Dependency.pm
 Makefile.PL
@@ -40,4 +40,5 @@ shared/parameters
 ARTISTIC.txt
 GPL2.txt
 shared/doincludes
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
