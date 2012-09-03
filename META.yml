@@ -28,4 +28,4 @@ requires:
   URI::file: 4.13
   YAML::Tiny: 1.36
 resources: {}
-version: 2.4
+version: 2.41
