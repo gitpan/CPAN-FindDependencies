@@ -4,7 +4,7 @@
       "unknown"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -22,12 +22,12 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "runtime" : {
@@ -35,8 +35,8 @@
             "Capture::Tiny" : "0.05",
             "Devel::CheckOS" : "1.52",
             "File::Temp" : "0.19",
-            "LWP::UserAgent" : 0,
-            "Module::CoreList" : "2.67",
+            "LWP::UserAgent" : "0",
+            "Module::CoreList" : "2.9",
             "Parse::CPAN::Packages" : "2.31",
             "Scalar::Util" : "1.14",
             "URI::file" : "4.13",
@@ -46,5 +46,5 @@
    },
    "release_status" : "stable",
    "resources" : {},
-   "version" : "2.41"
+   "version" : "2.42"
 }

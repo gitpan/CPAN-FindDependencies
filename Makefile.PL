@@ -20,7 +20,7 @@ WriteMakefile(
   )],
   PREREQ_PM    => {
     'Parse::CPAN::Packages' => 2.31,
-    'Module::CoreList'      => 2.67,
+    'Module::CoreList'      => 2.90,
     'YAML::Tiny'            => 1.36,
     'LWP::UserAgent'        => 0,
     'Scalar::Util'          => 1.14,
@@ -31,7 +31,7 @@ WriteMakefile(
   },
   dist => {
     DIST_CP => 'cp',
-    PREOP => "$Config{perlpath} -Mstrict -Mlib::CPAN::FindDependencies -w shared/doincludes \$(EXE_FILES) \$(TO_INST_PM)"
+    PREOP => "$Config{perlpath} -Mstrict -w shared/doincludes \$(EXE_FILES) \$(TO_INST_PM)"
   }
 );
 
